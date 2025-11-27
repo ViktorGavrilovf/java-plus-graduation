@@ -8,8 +8,10 @@ spring:
       server:
         native:
           searchLocations:
-            - classpath:main-service/{application}
-            - classpath:stats/{application}
+            - classpath:config/main-service/
+            - classpath:config/stats-server/
+            - classpath:config/gateway/
+
 server:
   port: 0
 
