@@ -10,7 +10,7 @@ spring:
           searchLocations:
             - classpath:config/main-service/
             - classpath:config/stats-server/
-            - classpath:config/gateway/
+            - classpath:config/gateway-server/
 
 server:
   port: 0
