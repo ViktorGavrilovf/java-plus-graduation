@@ -3,7 +3,7 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
       routes:
         - id: main_service_route
           uri: lb://main-service
@@ -13,7 +13,7 @@ spring:
         - id: stats_service_route
           uri: lb://stats-server
           predicates:
-            - Path=/hit,/stats
+            - Path=/hit/**,/stats/**
 
 server:
   port: 8080
