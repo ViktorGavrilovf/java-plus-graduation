@@ -15,7 +15,6 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    @EntityGraph(attributePaths = {"author"})
     @Query("""
             SELECT c FROM Comment c
             WHERE c.event.id = :eventId AND c.status = ru.practicum.model.CommentStatus.CONFIRMED
@@ -25,12 +24,11 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     Optional<Comment> findByIdAndAuthorId(Long id, Long authorId);
 
-    @EntityGraph(attributePaths = {"author", "event"})
     @Query("""
             SELECT c FROM Comment c
             WHERE (:status IS NULL OR c.status = :status)
             AND (:eventId IS NULL OR c.event.id = :eventId)
-            AND (:authorId IS NULL OR c.author.id = :authorId)
+            AND (:authorId IS NULL OR c.authorId = :authorId)
             ORDER BY c.createdOn DESC
             """)
     Page<Comment> searchWithoutDates(@Param("status") CommentStatus status,
@@ -38,12 +36,11 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                                      @Param("authorId") Long authorId,
                                      Pageable pageable);
 
-    @EntityGraph(attributePaths = {"author", "event"})
     @Query("""
             SELECT c FROM Comment c
             WHERE (:status IS NULL OR c.status = :status)
             AND (:eventId IS NULL OR c.event.id = :eventId)
-            AND (:authorId IS NULL OR c.author.id = :authorId)
+            AND (:authorId IS NULL OR c.authorId = :authorId)
             AND (c.createdOn >= :start)
             AND (c.createdOn <= :end)
             ORDER BY c.createdOn DESC
@@ -56,7 +53,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                                   Pageable pageable);
 
 
-    @EntityGraph(attributePaths = {"author"})
     @Query("""
             SELECT c FROM Comment c
             WHERE c.event.id = :eventId AND c.status = :status

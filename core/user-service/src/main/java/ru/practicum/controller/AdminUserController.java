@@ -1,4 +1,4 @@
-package ru.practicum.controller.admin;
+package ru.practicum.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.user.NewUserRequestDto;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.service.UserService;
 
 import java.util.List;
@@ -40,5 +41,10 @@ public class AdminUserController {
             @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
             @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
         return userService.getUsers(ids, from, size);
+    }
+
+    @GetMapping("/{userId}")
+    public UserShortDto getUser(@PathVariable Long userId) {
+        return userService.getUser(userId);
     }
 }

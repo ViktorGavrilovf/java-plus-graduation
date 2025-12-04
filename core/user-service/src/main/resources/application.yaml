@@ -1,12 +1,9 @@
 spring:
   application:
-    name: main-service
+    name: user-service
   config:
     import: "configserver:"
   cloud:
-    loadbalancer:
-      retry:
-        enabled: true
     config:
       discovery:
         enabled: true

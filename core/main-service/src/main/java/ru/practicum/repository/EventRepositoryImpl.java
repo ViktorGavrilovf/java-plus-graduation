@@ -7,10 +7,9 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import ru.practicum.model.Event;
+import ru.practicum.model.EventState;
 import ru.practicum.model.QCategory;
 import ru.practicum.model.QEvent;
-import ru.practicum.model.QUser;
-import ru.practicum.model.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,19 +29,17 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                                                 int from,
                                                 int size) {
         QEvent e = QEvent.event;
-        QUser u = QUser.user;
         QCategory c = QCategory.category;
 
         JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
 
-        BooleanExpression byUsers = (users == null || users.isEmpty()) ? null : e.initiator.id.in(users);
+        BooleanExpression byUsers = (users == null || users.isEmpty()) ? null : e.initiatorId.in(users);
         BooleanExpression byStates = (states == null || states.isEmpty()) ? null : e.state.in(states);
         BooleanExpression byCategories = (categories == null || categories.isEmpty()) ? null : e.category.id.in(categories);
         BooleanExpression afterStart = (rangeStart == null) ? null : e.eventDate.goe(rangeStart);
         BooleanExpression beforeEnd = (rangeEnd == null) ? null : e.eventDate.loe(rangeEnd);
 
         return queryFactory.selectFrom(e)
-                .leftJoin(e.initiator, u).fetchJoin()
                 .leftJoin(e.category, c).fetchJoin()
                 .where(byUsers, byStates, byCategories, afterStart, beforeEnd)
                 .orderBy(e.eventDate.desc())
@@ -62,7 +59,6 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                                            int from,
                                            int size) {
         QEvent e = QEvent.event;
-        QUser u = QUser.user;
         QCategory c = QCategory.category;
 
         JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
@@ -81,7 +77,6 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
         OrderSpecifier<?> order = "VIEWS".equals(sort) ? e.views.desc() : e.eventDate.asc();
 
         return queryFactory.selectFrom(e)
-                .leftJoin(e.initiator, u).fetchJoin()
                 .leftJoin(e.category, c).fetchJoin()
                 .where(statePub, byText, byCategories, byPaid, afterStart, beforeEnd, available)
                 .orderBy(order)

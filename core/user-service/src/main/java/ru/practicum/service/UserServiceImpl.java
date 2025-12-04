@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.user.NewUserRequestDto;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.exception.AlreadyExistsException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.UserMapper;
@@ -61,5 +62,12 @@ public class UserServiceImpl implements UserService {
         return userPage.getContent().stream()
                 .map(userMapper::toUserDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserShortDto getUser(Long userId) {
+        return userMapper.toShortDto(userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден")));
     }
 }

@@ -1,5 +1,6 @@
 package ru.practicum.service;
 
+import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.EndpointHitDto;
 import ru.practicum.client.StatsClient;
+import ru.practicum.client.UserClient;
 import ru.practicum.dto.event.*;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
@@ -17,7 +19,6 @@ import ru.practicum.model.*;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
-import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
 
@@ -47,18 +48,18 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto createEvent(Long userId, NewEventDto dto) {
         checkTwoHoursForEvent(dto.getEventDate());
-        User initiator = getUserOrThrow(userId);
+        checkUserExists(userId);
         Category category = getCategoryOrThrow(dto.getCategory());
         Location location = locationMapper.toLocation(dto.getLocation());
 
-        Event event = eventMapper.toEvent(dto, initiator, category, location);
+        Event event = eventMapper.toEvent(dto, userId, category, location);
 
         return buildFullDto(eventRepository.save(event));
     }
 
     @Override
     public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
-        getUserOrThrow(userId);
+        checkUserExists(userId);
 
         return eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size))
                 .stream()
@@ -68,7 +69,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getUserEvent(Long userId, Long eventId) {
-        getUserOrThrow(userId);
+        checkUserExists(userId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
 
@@ -78,7 +79,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto updateUserEvent(Long userId, Long eventId, UpdateEventUserRequestDto dto) {
-        getUserOrThrow(userId);
+        checkUserExists(userId);
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
 
@@ -216,6 +217,7 @@ public class EventServiceImpl implements EventService {
         EventFullDto dto = eventMapper.toFullDto(event);
         Long confirmed = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
         dto.setConfirmedRequests(confirmed);
+        dto.setInitiator(userClient.getUser(event.getInitiatorId()));
         return dto;
     }
 
@@ -223,12 +225,16 @@ public class EventServiceImpl implements EventService {
         EventShortDto dto = eventMapper.toShortDto(event);
         Long confirmed = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
         dto.setConfirmedRequests(confirmed);
+        dto.setInitiator(userClient.getUser(event.getInitiatorId()));
         return dto;
     }
 
-    private User getUserOrThrow(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User", "id", userId));
+    private void checkUserExists(Long userId) {
+        try {
+            userClient.getUser(userId);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("User", "id", userId);
+        }
     }
 
     private Category getCategoryOrThrow(Long categoryId) {

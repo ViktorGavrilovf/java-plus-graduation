@@ -1,18 +1,22 @@
 package ru.practicum.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.UserClient;
 import ru.practicum.dto.event.EventRequestStatusUpdateRequestDto;
 import ru.practicum.dto.event.EventRequestStatusUpdateResultDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.RequestMapper;
-import ru.practicum.model.*;
+import ru.practicum.model.Event;
+import ru.practicum.model.EventState;
+import ru.practicum.model.Request;
+import ru.practicum.model.RequestStatus;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
-import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,14 +29,13 @@ import java.util.stream.Collectors;
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final EventRepository eventRepository;
     private final RequestMapper requestMapper;
 
     @Override
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Request", "UserId", userId));
+        checkUserExists(userId);
         return requestRepository.findAllByRequesterId(userId).stream()
                 .map(requestMapper::toDto)
                 .collect(Collectors.toList());
@@ -41,8 +44,7 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto addParticipationRequest(Long userId, Long eventId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Request", "UserId", userId));
+        checkUserExists(userId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Request", "EventId", eventId));
 
@@ -50,7 +52,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Нельзя запросить участие в неопубликованном событии");
         }
 
-        if (event.getInitiator().getId().equals(userId)) {
+        if (event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Создатель не может запросить участие в своём событии.");
         }
 
@@ -72,7 +74,7 @@ public class RequestServiceImpl implements RequestService {
 
         Request request = new Request();
         request.setEvent(event);
-        request.setRequester(user);
+        request.setRequesterId(userId);
         request.setCreated(LocalDateTime.now());
         request.setStatus(status);
 
@@ -83,10 +85,11 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
+        checkUserExists(userId);
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Request", "RequestId", requestId));
 
-        if (!request.getRequester().getId().equals(userId)) {
+        if (!request.getRequesterId().equals(userId)) {
             throw new ConflictException("Пользователь может отменять только свои запросы");
         }
 
@@ -96,10 +99,11 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
+        checkUserExists(userId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Request", "EventId", eventId));
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Только создатель может смотреть запросы к событию");
         }
 
@@ -112,10 +116,11 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public EventRequestStatusUpdateResultDto changeRequestStatus(Long userId, Long eventId,
                                                                  EventRequestStatusUpdateRequestDto updateRequestDto) {
+        checkUserExists(userId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Request", "EventId", eventId));
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Только создатель может менять статус запроса");
         }
 
@@ -157,5 +162,13 @@ public class RequestServiceImpl implements RequestService {
         requestRepository.saveAll(requests);
 
         return new EventRequestStatusUpdateResultDto(confirmedRequests, rejectedRequests);
+    }
+
+    private void checkUserExists(Long userId) {
+        try {
+            userClient.getUser(userId);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("User", "id", userId);
+        }
     }
 }

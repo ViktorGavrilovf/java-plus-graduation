@@ -10,11 +10,11 @@ import ru.practicum.model.Compilation;
 
 public interface CompilationRepository extends JpaRepository<Compilation, Long> {
 
-    @EntityGraph(attributePaths = {"events", "events.category", "events.initiator"})
+    @EntityGraph(attributePaths = {"events", "events.category"})
     Page<Compilation> findByPinned(Boolean pinned, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = {"events", "events.category", "events.initiator"})
+    @EntityGraph(attributePaths = {"events", "events.category"})
     Page<Compilation> findAll(Pageable pageable);
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +

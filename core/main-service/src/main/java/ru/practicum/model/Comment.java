@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"author", "event"})
+@ToString
 @EqualsAndHashCode(of = {"id"})
 public class Comment {
 
@@ -37,10 +37,8 @@ public class Comment {
     @Column(name = "updated_on")
     private LocalDateTime updatedOn;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "author_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private User author;
+    @Column(name = "author_id", nullable = false)
+    private Long authorId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "event_id", nullable = false)

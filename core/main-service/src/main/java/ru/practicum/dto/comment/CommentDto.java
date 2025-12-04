@@ -19,7 +19,7 @@ public class CommentDto {
 
     String text;
 
-    UserShortDto author;
+    Long authorId;
 
     Long eventId;
 

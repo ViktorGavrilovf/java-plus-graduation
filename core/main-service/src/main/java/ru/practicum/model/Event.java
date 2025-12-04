@@ -40,9 +40,8 @@ public class Event {
     @Column(name = "published_on")
     LocalDateTime publishedOn;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "initiator_id", nullable = false)
-    User initiator;
+    @Column(name = "initiator_id", nullable = false)
+    Long initiatorId;
 
     @Embedded
     Location location;

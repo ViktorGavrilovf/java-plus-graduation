@@ -1,11 +1,13 @@
 package ru.practicum.service;
 
+import feign.FeignException;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.UserClient;
 import ru.practicum.dto.comment.CommentAdminDto;
 import ru.practicum.dto.comment.CommentDto;
 import ru.practicum.dto.comment.NewCommentDto;
@@ -13,10 +15,12 @@ import ru.practicum.dto.comment.UpdateCommentDto;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CommentMapper;
-import ru.practicum.model.*;
+import ru.practicum.model.Comment;
+import ru.practicum.model.CommentStatus;
+import ru.practicum.model.Event;
+import ru.practicum.model.EventState;
 import ru.practicum.repository.CommentRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,20 +33,20 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserClient userClient;
     private final CommentMapper commentMapper;
 
     @Override
     @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
-        User author = getUserOrThrow(userId);
+        checkUserExists(userId);
         Event event = getEventOrThrow(eventId);
 
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Нельзя комментировать неопубликованное событие");
         }
 
-        Comment comment = commentMapper.toComment(newCommentDto, author, event);
+        Comment comment = commentMapper.toComment(newCommentDto, userId, event);
 
         return commentMapper.toDto(commentRepository.save(comment));
     }
@@ -139,8 +143,12 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.deleteById(commentId);
     }
 
-    private User getUserOrThrow(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User", "id", userId));
+    private void checkUserExists(Long userId) {
+        try {
+            userClient.getUser(userId);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("User", "id", userId);
+        }
     }
 
     private Event getEventOrThrow(Long eventId) {
