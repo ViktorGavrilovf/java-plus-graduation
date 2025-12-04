@@ -1,8 +1,8 @@
 package ru.practicum.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import ru.practicum.dto.event.EventState;
 import ru.practicum.dto.event.*;
-import ru.practicum.model.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;

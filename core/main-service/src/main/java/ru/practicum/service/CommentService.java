@@ -4,7 +4,7 @@ import ru.practicum.dto.comment.CommentAdminDto;
 import ru.practicum.dto.comment.CommentDto;
 import ru.practicum.dto.comment.NewCommentDto;
 import ru.practicum.dto.comment.UpdateCommentDto;
-import ru.practicum.model.CommentStatus;
+import ru.practicum.dto.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;

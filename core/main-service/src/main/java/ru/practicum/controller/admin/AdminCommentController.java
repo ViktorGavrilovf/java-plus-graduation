@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.comment.CommentAdminDto;
 import ru.practicum.dto.comment.CommentDto;
-import ru.practicum.model.CommentStatus;
+import ru.practicum.dto.comment.CommentStatus;
 import ru.practicum.service.CommentService;
 
 import java.time.LocalDateTime;

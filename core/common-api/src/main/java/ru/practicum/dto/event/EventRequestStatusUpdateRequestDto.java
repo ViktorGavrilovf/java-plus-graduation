@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.model.RequestStatus;
+import ru.practicum.dto.request.RequestStatus;
 
 import java.util.List;
 

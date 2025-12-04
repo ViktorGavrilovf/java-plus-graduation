@@ -2,12 +2,11 @@ package ru.practicum.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.model.Comment;
-import ru.practicum.model.CommentStatus;
+import ru.practicum.dto.comment.CommentStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +16,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("""
             SELECT c FROM Comment c
-            WHERE c.event.id = :eventId AND c.status = ru.practicum.model.CommentStatus.CONFIRMED
+            WHERE c.event.id = :eventId AND c.status = ru.practicum.dto.comment.CommentStatus.CONFIRMED
             ORDER BY c.createdOn DESC
             """)
     List<Comment> findPublishedByEvent(@Param("eventId") Long eventId, Pageable pageable);

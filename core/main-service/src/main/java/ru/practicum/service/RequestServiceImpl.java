@@ -12,9 +12,9 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
+import ru.practicum.dto.event.EventState;
 import ru.practicum.model.Request;
-import ru.practicum.model.RequestStatus;
+import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.RequestRepository;
 

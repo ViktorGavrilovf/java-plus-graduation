@@ -16,9 +16,9 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CommentMapper;
 import ru.practicum.model.Comment;
-import ru.practicum.model.CommentStatus;
+import ru.practicum.dto.comment.CommentStatus;
 import ru.practicum.model.Event;
-import ru.practicum.model.EventState;
+import ru.practicum.dto.event.EventState;
 import ru.practicum.repository.CommentRepository;
 import ru.practicum.repository.EventRepository;
 

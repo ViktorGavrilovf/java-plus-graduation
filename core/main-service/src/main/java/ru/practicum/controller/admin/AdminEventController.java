@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.event.EventFullDto;
 import ru.practicum.dto.event.UpdateEventAdminRequestDto;
-import ru.practicum.model.EventState;
+import ru.practicum.dto.event.EventState;
 import ru.practicum.service.EventService;
 
 import java.time.LocalDateTime;

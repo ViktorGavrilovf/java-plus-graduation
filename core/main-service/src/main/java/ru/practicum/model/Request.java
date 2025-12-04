@@ -3,6 +3,7 @@ package ru.practicum.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import ru.practicum.dto.request.RequestStatus;
 
 import java.time.LocalDateTime;
 

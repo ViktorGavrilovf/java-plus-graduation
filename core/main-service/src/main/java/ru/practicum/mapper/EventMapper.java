@@ -19,7 +19,7 @@ public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "confirmedRequests", constant = "0")
-    @Mapping(target = "state", expression = "java(ru.practicum.model.EventState.PENDING)")
+    @Mapping(target = "state", expression = "java(ru.practicum.dto.event.EventState.PENDING)")
     @Mapping(target = "createdOn", expression = "java(mapNow())")
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "views", constant = "0L")

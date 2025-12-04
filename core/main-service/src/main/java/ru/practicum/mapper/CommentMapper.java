@@ -16,7 +16,7 @@ public interface CommentMapper {
     @Mapping(target = "updatedOn", ignore = true)
     @Mapping(target = "authorId", source = "authorId")
     @Mapping(target = "event", source = "event")
-    @Mapping(target = "status", expression = "java(ru.practicum.model.CommentStatus.PENDING)")
+    @Mapping(target = "status", expression = "java(ru.practicum.dto.comment.CommentStatus.PENDING)")
     Comment toComment(NewCommentDto newCommentDto, Long authorId, Event event);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
