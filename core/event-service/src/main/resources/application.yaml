@@ -4,14 +4,14 @@ spring:
   config:
     import: "configserver:"
   cloud:
-    loadbalancer:
-      retry:
-        enabled: true
     config:
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
       discovery:
         enabled: true
-        service-id: config-server
-      fail-fast: true
+        serviceId: config-server
 
 server:
   port: 0
