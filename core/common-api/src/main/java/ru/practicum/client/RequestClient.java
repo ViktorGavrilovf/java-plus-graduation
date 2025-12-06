@@ -6,7 +6,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import ru.practicum.config.FeignRetryConfig;
 import ru.practicum.dto.request.RequestStatus;
 
-@FeignClient(name = "request-service", path = "/internal/requests", configuration = FeignRetryConfig.class)
+@FeignClient(
+        name = "request-service",
+        path = "/internal/requests",
+        configuration = FeignRetryConfig.class,
+        fallback = RequestClientFallback.class)
+
 public interface RequestClient {
 
     @GetMapping("/event/{eventId}/count/{status}")
