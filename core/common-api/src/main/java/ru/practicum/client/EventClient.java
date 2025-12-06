@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import ru.practicum.config.FeignRetryConfig;
 import ru.practicum.dto.event.EventFullDto;
 
-@FeignClient(name = "main-service", path = "/internal/events", configuration = FeignRetryConfig.class)
+@FeignClient(name = "event-service", path = "/internal/events", configuration = FeignRetryConfig.class)
 public interface EventClient {
 
     @GetMapping("/{eventId}")

@@ -10,8 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 @ConfigurationPropertiesScan
 @EnableFeignClients(basePackages = "ru.practicum.client")
-public class MainServiceApplication {
+public class EventServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(MainServiceApplication.class, args);
+        SpringApplication.run(EventServiceApplication.class, args);
     }
 }

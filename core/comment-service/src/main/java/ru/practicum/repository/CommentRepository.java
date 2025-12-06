@@ -16,7 +16,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("""
             SELECT c FROM Comment c
-            WHERE c.event.id = :eventId AND c.status = ru.practicum.dto.comment.CommentStatus.CONFIRMED
+            WHERE c.eventId = :eventId AND c.status = ru.practicum.dto.comment.CommentStatus.CONFIRMED
             ORDER BY c.createdOn DESC
             """)
     List<Comment> findPublishedByEvent(@Param("eventId") Long eventId, Pageable pageable);
@@ -26,7 +26,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("""
             SELECT c FROM Comment c
             WHERE (:status IS NULL OR c.status = :status)
-            AND (:eventId IS NULL OR c.event.id = :eventId)
+            AND (:eventId IS NULL OR c.eventId = :eventId)
             AND (:authorId IS NULL OR c.authorId = :authorId)
             ORDER BY c.createdOn DESC
             """)
@@ -38,7 +38,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("""
             SELECT c FROM Comment c
             WHERE (:status IS NULL OR c.status = :status)
-            AND (:eventId IS NULL OR c.event.id = :eventId)
+            AND (:eventId IS NULL OR c.eventId = :eventId)
             AND (:authorId IS NULL OR c.authorId = :authorId)
             AND (c.createdOn >= :start)
             AND (c.createdOn <= :end)
@@ -54,7 +54,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("""
             SELECT c FROM Comment c
-            WHERE c.event.id = :eventId AND c.status = :status
+            WHERE c.eventId = :eventId AND c.status = :status
             ORDER BY c.createdOn DESC
             """)
     List<Comment> findByEventIdAndStatus(@Param("eventId") Long eventId,

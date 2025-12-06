@@ -15,10 +15,15 @@ spring:
           predicates:
             - Path=/internal/requests/**,/users/*/requests/**,/users/*/events/*/requests/**
 
-        - id: main_service_route
-          uri: lb://main-service
+        - id: event_service_route
+          uri: lb://event-service
           predicates:
-            - Path=/**
+            - Path=/admin/events/**,/events/**,/users/*/events/**,/admin/categories/**,/categories/**,/admin/compilations/**,/compilations/**
+
+        - id: comment_service_route
+          uri: lb://comment-service
+          predicates:
+            - Path=/admin/comments/**,/users/*/comments/**,/users/*/events/*/comments/**,/events/*/comments/**
 
 server:
   port: 8080

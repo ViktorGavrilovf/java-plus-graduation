@@ -1,4 +1,4 @@
-package ru.practicum.controller.admin;
+package ru.practicum.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;

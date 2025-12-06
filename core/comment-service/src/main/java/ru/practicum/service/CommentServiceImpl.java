@@ -7,20 +7,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
-import ru.practicum.dto.comment.CommentAdminDto;
-import ru.practicum.dto.comment.CommentDto;
-import ru.practicum.dto.comment.NewCommentDto;
-import ru.practicum.dto.comment.UpdateCommentDto;
+import ru.practicum.dto.comment.*;
+import ru.practicum.dto.event.EventFullDto;
+import ru.practicum.dto.event.EventState;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CommentMapper;
 import ru.practicum.model.Comment;
-import ru.practicum.dto.comment.CommentStatus;
-import ru.practicum.model.Event;
-import ru.practicum.dto.event.EventState;
 import ru.practicum.repository.CommentRepository;
-import ru.practicum.repository.EventRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +28,7 @@ import java.util.stream.Collectors;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final EventRepository eventRepository;
+    private final EventClient eventClient;
     private final UserClient userClient;
     private final CommentMapper commentMapper;
 
@@ -40,13 +36,13 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
         checkUserExists(userId);
-        Event event = getEventOrThrow(eventId);
+        EventFullDto event = eventClient.getEvent(eventId);
 
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Нельзя комментировать неопубликованное событие");
         }
 
-        Comment comment = commentMapper.toComment(newCommentDto, userId, event);
+        Comment comment = commentMapper.toComment(newCommentDto, userId, eventId);
 
         return commentMapper.toDto(commentRepository.save(comment));
     }
@@ -74,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getCommentsByEvent(Long eventId, int from, int size) {
-        getEventOrThrow(eventId);
+        eventClient.getEvent(eventId);
         return commentRepository.findPublishedByEvent(eventId, PageRequest.of(from / size, size))
                 .stream()
                 .map(commentMapper::toDto)
@@ -110,7 +106,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getCommentByStatus(Long eventId, CommentStatus status) {
-        getEventOrThrow(eventId);
+        eventClient.getEvent(eventId);
 
         return commentRepository.findByEventIdAndStatus(eventId, status).stream()
                 .filter(comment -> comment.getStatus().equals(status))
@@ -149,10 +145,6 @@ public class CommentServiceImpl implements CommentService {
         } catch (FeignException.NotFound e) {
             throw new NotFoundException("User", "id", userId);
         }
-    }
-
-    private Event getEventOrThrow(Long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event", "id", eventId));
     }
 
     private Comment getCommentOrThrow(Long commentId, Long userId) {
