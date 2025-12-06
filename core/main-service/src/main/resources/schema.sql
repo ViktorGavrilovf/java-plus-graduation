@@ -1,6 +1,5 @@
 DROP TABLE IF EXISTS categories CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
-DROP TABLE IF EXISTS requests CASCADE;
 DROP TABLE IF EXISTS compilation CASCADE;
 
 CREATE TABLE IF NOT EXISTS categories (
@@ -26,15 +25,6 @@ CREATE TABLE IF NOT EXISTS events (
     request_moderation BOOLEAN NOT NULL,
     confirmed_requests INT NOT NULL,
     views BIGINT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS requests (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    created TIMESTAMP   NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    requester_id BIGINT NOT NULL,
-    event_id BIGINT NOT NULL,
-    CONSTRAINT fk_requests_event FOREIGN KEY (event_id) REFERENCES events (id)
 );
 
 CREATE TABLE IF NOT EXISTS compilation (

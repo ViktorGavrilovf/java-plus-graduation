@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ViewStatsDto;
+import ru.practicum.client.RequestClient;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
@@ -20,7 +21,6 @@ import ru.practicum.model.Event;
 import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.repository.CompilationRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.RequestRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,7 +37,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventRepository eventRepository;
     private final CompilationMapper compilationMapper;
     private final StatsClient statsClient;
-    private final RequestRepository requestRepository;
+    private final RequestClient requestClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,7 +64,7 @@ public class CompilationServiceImpl implements CompilationService {
             for (EventShortDto eventDto : compilationDto.getEvents()) {
                 String eventUri = "/events/" + eventDto.getId();
                 eventDto.setViews(viewsMap.getOrDefault(eventUri, 0L));
-                Long confirmedRequests = requestRepository.countByEventIdAndStatus(eventDto.getId(),
+                Long confirmedRequests = requestClient.countByStatus(eventDto.getId(),
                         RequestStatus.CONFIRMED);
                 eventDto.setConfirmedRequests(confirmedRequests);
             }

@@ -9,10 +9,10 @@ import ru.practicum.model.Request;
 public interface RequestMapper {
 
     @Mapping(target = "requesterId", source = "requesterId")
-    @Mapping(target = "eventId", source = "request.event.id")
+    @Mapping(target = "eventId", source = "eventId")
     ParticipationRequestDto toDto(Request request);
 
     @Mapping(target = "requesterId", source = "requesterId")
-    @Mapping(target = "event.id", source = "eventId")
+    @Mapping(target = "eventId", source = "eventId")
     Request toEntity(ParticipationRequestDto dto);
 }

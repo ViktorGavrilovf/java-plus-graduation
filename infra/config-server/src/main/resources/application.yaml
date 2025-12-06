@@ -12,6 +12,7 @@ spring:
             - classpath:config/stats-server/
             - classpath:config/gateway-server/
             - classpath:config/user-service/
+            - classpath:config/request-service/
 
 server:
   port: 0

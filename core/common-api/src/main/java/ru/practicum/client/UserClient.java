@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import ru.practicum.config.FeignRetryConfig;
 import ru.practicum.dto.user.UserShortDto;
 
-@FeignClient(name = "user-service", path = "/admin/users", configuration = FeignRetryConfig.class)
+@FeignClient(name = "user-service", path = "/internal/users", configuration = FeignRetryConfig.class)
 public interface UserClient {
     @GetMapping("/{userId}")
     UserShortDto getUser(@PathVariable("userId") Long userId);

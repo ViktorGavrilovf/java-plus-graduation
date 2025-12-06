@@ -8,7 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.EndpointHitDto;
-import ru.practicum.dto.event.EventState;
+import ru.practicum.client.RequestClient;
 import ru.practicum.client.StatsClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.event.*;
@@ -17,10 +17,11 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.mapper.LocationMapper;
-import ru.practicum.model.*;
+import ru.practicum.model.Category;
+import ru.practicum.model.Event;
+import ru.practicum.model.Location;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.RequestRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,7 +37,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserClient userClient;
     private final CategoryRepository categoryRepository;
-    private final RequestRepository requestRepository;
+    private final RequestClient requestClient;
 
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
@@ -217,7 +218,7 @@ public class EventServiceImpl implements EventService {
     //helper
     private EventFullDto buildFullDto(Event event) {
         EventFullDto dto = eventMapper.toFullDto(event);
-        Long confirmed = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+        Long confirmed = requestClient.countByStatus(event.getId(), RequestStatus.CONFIRMED);
         dto.setConfirmedRequests(confirmed);
         dto.setInitiator(userClient.getUser(event.getInitiatorId()));
         return dto;
@@ -225,7 +226,7 @@ public class EventServiceImpl implements EventService {
 
     private EventShortDto buildShortDto(Event event) {
         EventShortDto dto = eventMapper.toShortDto(event);
-        Long confirmed = requestRepository.countByEventIdAndStatus(event.getId(), RequestStatus.CONFIRMED);
+        Long confirmed = requestClient.countByStatus(event.getId(), RequestStatus.CONFIRMED);
         dto.setConfirmedRequests(confirmed);
         dto.setInitiator(userClient.getUser(event.getInitiatorId()));
         return dto;
