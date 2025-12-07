@@ -41,10 +41,10 @@ public class Comment {
     @Column(name = "author_id", nullable = false)
     private Long authorId;
 
-    @JoinColumn(name = "event_id", nullable = false)
+    @Column(name = "event_id", nullable = false)
     private Long eventId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    CommentStatus status;
+    private CommentStatus status;
 }
