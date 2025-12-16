@@ -12,4 +12,10 @@ public class RequestClientFallback implements RequestClient {
         log.warn("Сервис запросов недоступен");
         return 0L;
     }
+
+    @Override
+    public boolean hasVisitedEvent(long userId, long eventId) {
+        log.warn("Сервис запросов недоступен");
+        return false;
+    }
 }
