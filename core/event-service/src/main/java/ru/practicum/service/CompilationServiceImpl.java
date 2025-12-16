@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ViewStatsDto;
 import ru.practicum.client.RequestClient;
-import ru.practicum.client.StatsClient;
 import ru.practicum.dto.compilation.CompilationDto;
 import ru.practicum.dto.compilation.NewCompilationDto;
 import ru.practicum.dto.compilation.UpdateCompilationRequestDto;
@@ -36,7 +35,6 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
     private final CompilationMapper compilationMapper;
-    private final StatsClient statsClient;
     private final RequestClient requestClient;
 
     @Override
@@ -59,39 +57,14 @@ public class CompilationServiceImpl implements CompilationService {
         if (compilationDto.getEvents() != null && !compilationDto.getEvents().isEmpty()) {
             List<String> uris = compilationDto.getEvents().stream()
                     .map(event -> "/events/" + event.getId())
-                    .collect(Collectors.toList());
-            Map<String, Long> viewsMap = getViewsFromStats(uris);
+                    .toList();
             for (EventShortDto eventDto : compilationDto.getEvents()) {
-                String eventUri = "/events/" + eventDto.getId();
-                eventDto.setViews(viewsMap.getOrDefault(eventUri, 0L));
                 Long confirmedRequests = requestClient.countByStatus(eventDto.getId(),
                         RequestStatus.CONFIRMED);
                 eventDto.setConfirmedRequests(confirmedRequests);
             }
         }
         return compilationDto;
-    }
-
-    private Map<String, Long> getViewsFromStats(List<String> uris) {
-        try {
-            LocalDateTime end = LocalDateTime.now();
-            LocalDateTime start = end.minusYears(1);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            List<ViewStatsDto> stats = statsClient.getStats(
-                    start.format(formatter),
-                    end.format(formatter),
-                    uris,
-                    false
-            );
-            Map<String, Long> viewsMap = new HashMap<>();
-            for (ViewStatsDto stat : stats) {
-                viewsMap.put(stat.getUri(), stat.getHits());
-            }
-            return viewsMap;
-        } catch (Exception e) {
-            log.warn("Ошибка при получении данных из сервиса статистики: {}", e.getMessage());
-            return new HashMap<>();
-        }
     }
 
     @Override

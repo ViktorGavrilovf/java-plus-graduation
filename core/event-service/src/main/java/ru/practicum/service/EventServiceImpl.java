@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.EndpointHitDto;
 import ru.practicum.client.RequestClient;
-import ru.practicum.client.StatsClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.RequestStatus;
@@ -41,8 +40,6 @@ public class EventServiceImpl implements EventService {
 
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
-
-    private final StatsClient statsClient;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -188,12 +185,9 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findPublishedEvents(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
 
-        saveHit(request);
-
         if (events.isEmpty()) return List.of();
 
         return events.stream()
-                .peek(event -> event.setViews(getViewsForEvent(event.getId())))
                 .map(this::buildShortDto)
                 .collect(Collectors.toList());
     }
@@ -207,9 +201,6 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Event", "id", eventId);
         }
 
-        saveHit(request);
-
-        event.setViews(event.getViews() + 1);
         eventRepository.save(event);
 
         return eventMapper.toFullDto(event);
@@ -255,34 +246,6 @@ public class EventServiceImpl implements EventService {
     private void checkRangeTime(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null && start.isAfter(end)) {
             throw new IllegalArgumentException("Начало должно быть до окончания");
-        }
-    }
-
-    private void saveHit(HttpServletRequest request) {
-        try {
-            EndpointHitDto hit = EndpointHitDto.builder()
-                    .app("ewm-main-service")
-                    .uri(request.getRequestURI())
-                    .ip(request.getRemoteAddr())
-                    .timestamp(LocalDateTime.now())
-                    .build();
-            statsClient.saveHit(hit);
-        } catch (Exception e) {
-            log.warn("Не удалось записать хит статистики: {}", e.getMessage());
-        }
-    }
-
-    private Long getViewsForEvent(Long eventId) {
-        String start = LocalDateTime.now().minusYears(10).format(FORMATTER);
-        String end = LocalDateTime.now().format(FORMATTER);
-        String uri = "/events/" + eventId;
-
-        try {
-            var listStats = statsClient.getStats(start, end, List.of(uri), true);
-            return listStats.isEmpty() ? 0L : listStats.get(0).getHits();
-        } catch (Exception e) {
-            log.warn("Не удалось получить хит статистики: {}", e.getMessage());
-            return 0L;
         }
     }
 }
