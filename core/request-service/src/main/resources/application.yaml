@@ -16,6 +16,10 @@ spring:
 server:
   port: 0
 
+grpc:
+  server:
+    port: -1
+
 eureka:
   client:
     serviceUrl:
