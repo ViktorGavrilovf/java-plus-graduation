@@ -12,9 +12,11 @@ import java.time.LocalDateTime;
 public interface EventMapper {
 
     @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     EventFullDto toFullDto(Event event);
 
     @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     EventShortDto toShortDto(Event event);
 
     @Mapping(target = "id", ignore = true)

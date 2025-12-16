@@ -7,9 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.EndpointHitDto;
-import ru.practicum.client.RequestClient;
-import ru.practicum.client.UserClient;
+import ru.practicum.client.*;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.exception.ConflictException;
@@ -37,7 +35,8 @@ public class EventServiceImpl implements EventService {
     private final UserClient userClient;
     private final CategoryRepository categoryRepository;
     private final RequestClient requestClient;
-
+    private final CollectorClient collectorClient;
+    private final AnalyzerClient analyzerClient;
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
 
@@ -204,6 +203,46 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
 
         return eventMapper.toFullDto(event);
+    }
+
+    @Override
+    public void likeEvent(Long userId, Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new ConflictException("Нельзя лайкать неопубликованное событие");
+        }
+
+        boolean hasVisited = requestClient.hasVisitedEvent(userId, eventId);
+
+        if (!hasVisited) {
+            throw new ConflictException("Пользователь не посещал мероприятие");
+        }
+
+        collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_LIKE);
+    }
+
+    @Override
+    public List<EventShortDto> getRecommendations(Long userId, int size) {
+        return analyzerClient
+                .getRecommendationsForUser(userId, size)
+                .map(rec -> {
+                    Event event = eventRepository.findById(rec.getEventId())
+                            .orElseThrow(() -> new NotFoundException("Event", "id", rec.getEventId()));
+
+                    EventShortDto dto = eventMapper.toShortDto(event);
+
+                    dto.setRating(rec.getScore());
+
+                    Long confirmed = requestClient.countByStatus(event.getId(), RequestStatus.CONFIRMED);
+                    dto.setConfirmedRequests(confirmed);
+
+                    dto.setInitiator(userClient.getUser(event.getInitiatorId()));
+
+                    return dto;
+                })
+                .toList();
     }
 
     //helper

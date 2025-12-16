@@ -18,4 +18,6 @@ public interface RequestService {
 
     EventRequestStatusUpdateResultDto changeRequestStatus(Long userId, Long eventId,
                                                           EventRequestStatusUpdateRequestDto updateRequestDto);
+
+    boolean hasVisitedEvent(Long userId, Long eventId);
 }
