@@ -23,8 +23,7 @@ CREATE TABLE IF NOT EXISTS events (
     paid BOOLEAN NOT NULL,
     participant_limit INT NOT NULL,
     request_moderation BOOLEAN NOT NULL,
-    confirmed_requests INT NOT NULL,
-    views BIGINT NOT NULL
+    confirmed_requests INT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS compilation (

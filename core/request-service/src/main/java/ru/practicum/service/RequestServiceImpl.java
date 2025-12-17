@@ -4,6 +4,8 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.ActionType;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.event.EventFullDto;
@@ -31,6 +33,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserClient userClient;
     private final EventClient eventClient;
+    private final CollectorClient collectorClient;
     private final RequestMapper requestMapper;
 
     @Override
@@ -78,6 +81,8 @@ public class RequestServiceImpl implements RequestService {
         request.setStatus(status);
 
         Request saved = requestRepository.save(request);
+
+        collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_REGISTER);
         return requestMapper.toDto(saved);
     }
 
@@ -159,6 +164,11 @@ public class RequestServiceImpl implements RequestService {
         requestRepository.saveAll(requests);
 
         return new EventRequestStatusUpdateResultDto(confirmedRequests, rejectedRequests);
+    }
+
+    @Override
+    public boolean hasVisitedEvent(Long userId, Long eventId) {
+        return requestRepository.existsByRequesterIdAndEventIdAndStatus(userId, eventId, RequestStatus.CONFIRMED);
     }
 
     private void checkUserExists(Long userId) {
