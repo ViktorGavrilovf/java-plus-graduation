@@ -3,10 +3,11 @@ package ru.practicum.client;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.stats.proto.*;
+import ru.practicum.ewm.stats.proto.RecommendationsControllerGrpc;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -28,34 +29,6 @@ public class AnalyzerClient {
             return asStream(iterator);
         } catch (Exception e) {
             log.error("Ошибка при получении рекомендаций для пользователя: {}", e.getMessage());
-        }
-        return Stream.empty();
-    }
-
-    public Stream<RecommendedEventProto> getSimilarEvents(long eventId, long userId, int maxResults) {
-        SimilarEventsRequestProto request = SimilarEventsRequestProto.newBuilder()
-                .setEventId(eventId)
-                .setUserId(userId)
-                .setMaxResults(maxResults)
-                .build();
-        try {
-            Iterator<RecommendedEventProto> iterator = client.getSimilarEvents(request);
-            return asStream(iterator);
-        } catch (Exception e) {
-            log.error("Ошибка при получении похожих событий: {}", e.getMessage());
-        }
-        return Stream.empty();
-    }
-
-    public Stream<RecommendedEventProto> getInteractionsCount(List<Long> eventIds) {
-        InteractionsCountRequestProto request = InteractionsCountRequestProto.newBuilder()
-                .addAllEventId(eventIds)
-                .build();
-        try {
-            Iterator<RecommendedEventProto> iterator = client.getInteractionsCount(request);
-            return asStream(iterator);
-        } catch (Exception e) {
-            log.error("Ошибка при получении количества взаимодействий: {}", e.getMessage());
         }
         return Stream.empty();
     }

@@ -194,7 +194,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getPublicEvent(Long eventId, HttpServletRequest request) {
+    public EventFullDto getPublicEvent(Long eventId, Long userId, HttpServletRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
 
@@ -202,7 +202,7 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Event", "id", eventId);
         }
 
-        eventRepository.save(event);
+        collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_VIEW);
 
         return eventMapper.toFullDto(event);
     }
