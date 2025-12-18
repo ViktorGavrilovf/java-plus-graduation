@@ -23,6 +23,7 @@ import ru.practicum.repository.RequestRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -169,6 +170,14 @@ public class RequestServiceImpl implements RequestService {
     @Override
     public boolean hasVisitedEvent(Long userId, Long eventId) {
         return requestRepository.existsByRequesterIdAndEventIdAndStatus(userId, eventId, RequestStatus.CONFIRMED);
+    }
+
+    @Override
+    public Map<Long, Long> countConfirmedByEventIds(List<Long> eventIds) {
+        return requestRepository
+                .countByEventIdsAndStatus(eventIds, RequestStatus.CONFIRMED)
+                .stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
     }
 
     private void checkUserExists(Long userId) {

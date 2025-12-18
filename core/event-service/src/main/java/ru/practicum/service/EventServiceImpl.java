@@ -42,8 +42,6 @@ public class EventServiceImpl implements EventService {
     private final LocationMapper locationMapper;
 
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     //PRIVATE
     @Override
     @Transactional
@@ -213,13 +211,13 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
 
         if (event.getState() != EventState.PUBLISHED) {
-            throw new ConflictException("Нельзя лайкать неопубликованное событие");
+            throw new IllegalArgumentException("Нельзя лайкать неопубликованное событие");
         }
 
         boolean hasVisited = requestClient.hasVisitedEvent(userId, eventId);
 
         if (!hasVisited) {
-            throw new ConflictException("Пользователь не посещал мероприятие");
+            throw new IllegalArgumentException("Пользователь не посещал мероприятие");
         }
 
         collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_LIKE);

@@ -22,6 +22,7 @@ import ru.practicum.repository.EventRepository;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -53,13 +54,20 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     private CompilationDto addConfirmedRequestsAndViews(CompilationDto compilationDto) {
-        if (compilationDto.getEvents() != null && !compilationDto.getEvents().isEmpty()) {
-            for (EventShortDto eventDto : compilationDto.getEvents()) {
-                Long confirmedRequests = requestClient.countByStatus(eventDto.getId(),
-                        RequestStatus.CONFIRMED);
-                eventDto.setConfirmedRequests(confirmedRequests);
-            }
+        if (compilationDto.getEvents() == null && compilationDto.getEvents().isEmpty()) {
+            return compilationDto;
         }
+
+        List<Long> eventIds = compilationDto.getEvents()
+                .stream()
+                .map(EventShortDto::getId)
+                .toList();
+
+        Map<Long, Long> confirmedMap = requestClient.countConfirmedByEventIds(eventIds);
+
+        compilationDto.getEvents().forEach(event ->
+                event.setConfirmedRequests(confirmedMap.getOrDefault(event.getId(), 0L)));
+
         return compilationDto;
     }
 
