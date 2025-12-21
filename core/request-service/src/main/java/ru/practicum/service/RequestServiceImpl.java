@@ -4,6 +4,8 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.ActionType;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.client.EventClient;
 import ru.practicum.client.UserClient;
 import ru.practicum.dto.event.EventFullDto;
@@ -21,6 +23,7 @@ import ru.practicum.repository.RequestRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +34,7 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserClient userClient;
     private final EventClient eventClient;
+    private final CollectorClient collectorClient;
     private final RequestMapper requestMapper;
 
     @Override
@@ -78,6 +82,8 @@ public class RequestServiceImpl implements RequestService {
         request.setStatus(status);
 
         Request saved = requestRepository.save(request);
+
+        collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_REGISTER);
         return requestMapper.toDto(saved);
     }
 
@@ -159,6 +165,19 @@ public class RequestServiceImpl implements RequestService {
         requestRepository.saveAll(requests);
 
         return new EventRequestStatusUpdateResultDto(confirmedRequests, rejectedRequests);
+    }
+
+    @Override
+    public boolean hasVisitedEvent(Long userId, Long eventId) {
+        return requestRepository.existsByRequesterIdAndEventIdAndStatus(userId, eventId, RequestStatus.CONFIRMED);
+    }
+
+    @Override
+    public Map<Long, Long> countConfirmedByEventIds(List<Long> eventIds) {
+        return requestRepository
+                .countByEventIdsAndStatus(eventIds, RequestStatus.CONFIRMED)
+                .stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
     }
 
     private void checkUserExists(Long userId) {

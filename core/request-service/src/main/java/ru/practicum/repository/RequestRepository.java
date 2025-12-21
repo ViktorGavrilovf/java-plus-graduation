@@ -1,6 +1,8 @@
 package ru.practicum.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.model.Request;
 import ru.practicum.dto.request.RequestStatus;
 
@@ -24,4 +26,17 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findAllByRequesterId(Long requesterId);
 
     List<Request> findAllByEventId(Long eventId);
+
+
+    boolean existsByRequesterIdAndEventIdAndStatus(Long requesterId, Long eventId, RequestStatus status);
+
+    @Query("""
+        SELECT r.eventId, COUNT(r)
+        FROM Request r
+        WHERE r.eventId IN :eventIds
+          AND r.status = :status
+        GROUP BY r.eventId
+    """)
+    List<Object[]> countByEventIdsAndStatus(@Param("eventIds") List<Long> eventIds,
+                                            @Param("status") RequestStatus status);
 }

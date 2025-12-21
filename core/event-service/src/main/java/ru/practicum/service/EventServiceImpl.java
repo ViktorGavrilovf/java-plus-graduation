@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.EndpointHitDto;
-import ru.practicum.client.RequestClient;
-import ru.practicum.client.StatsClient;
-import ru.practicum.client.UserClient;
+import ru.practicum.client.*;
 import ru.practicum.dto.event.*;
 import ru.practicum.dto.request.RequestStatus;
 import ru.practicum.exception.ConflictException;
@@ -38,13 +35,12 @@ public class EventServiceImpl implements EventService {
     private final UserClient userClient;
     private final CategoryRepository categoryRepository;
     private final RequestClient requestClient;
+    private final CollectorClient collectorClient;
+    private final AnalyzerClient analyzerClient;
 
     private final EventMapper eventMapper;
     private final LocationMapper locationMapper;
 
-    private final StatsClient statsClient;
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     //PRIVATE
     @Override
@@ -188,18 +184,15 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findPublishedEvents(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
 
-        saveHit(request);
-
         if (events.isEmpty()) return List.of();
 
         return events.stream()
-                .peek(event -> event.setViews(getViewsForEvent(event.getId())))
                 .map(this::buildShortDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public EventFullDto getPublicEvent(Long eventId, HttpServletRequest request) {
+    public EventFullDto getPublicEvent(Long eventId, Long userId, HttpServletRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
 
@@ -207,12 +200,49 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Event", "id", eventId);
         }
 
-        saveHit(request);
-
-        event.setViews(event.getViews() + 1);
-        eventRepository.save(event);
+        collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_VIEW);
 
         return eventMapper.toFullDto(event);
+    }
+
+    @Override
+    public void likeEvent(Long userId, Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event", "id", eventId));
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new IllegalArgumentException("Нельзя лайкать неопубликованное событие");
+        }
+
+        boolean hasVisited = requestClient.hasVisitedEvent(userId, eventId);
+
+        if (!hasVisited) {
+            throw new IllegalArgumentException("Пользователь не посещал мероприятие");
+        }
+
+        collectorClient.collectUserActions(userId, eventId, ActionType.ACTION_LIKE);
+    }
+
+    @Override
+    public List<EventShortDto> getRecommendations(Long userId, int size) {
+        return analyzerClient
+                .getRecommendationsForUser(userId, size)
+                .map(rec -> {
+                    Event event = eventRepository.findById(rec.getEventId())
+                            .orElseThrow(() -> new NotFoundException("Event", "id", rec.getEventId()));
+
+                    EventShortDto dto = eventMapper.toShortDto(event);
+
+                    dto.setRating(rec.getScore());
+
+                    Long confirmed = requestClient.countByStatus(event.getId(), RequestStatus.CONFIRMED);
+                    dto.setConfirmedRequests(confirmed);
+
+                    dto.setInitiator(userClient.getUser(event.getInitiatorId()));
+
+                    return dto;
+                })
+                .toList();
     }
 
     //helper
@@ -255,34 +285,6 @@ public class EventServiceImpl implements EventService {
     private void checkRangeTime(LocalDateTime start, LocalDateTime end) {
         if (start != null && end != null && start.isAfter(end)) {
             throw new IllegalArgumentException("Начало должно быть до окончания");
-        }
-    }
-
-    private void saveHit(HttpServletRequest request) {
-        try {
-            EndpointHitDto hit = EndpointHitDto.builder()
-                    .app("ewm-main-service")
-                    .uri(request.getRequestURI())
-                    .ip(request.getRemoteAddr())
-                    .timestamp(LocalDateTime.now())
-                    .build();
-            statsClient.saveHit(hit);
-        } catch (Exception e) {
-            log.warn("Не удалось записать хит статистики: {}", e.getMessage());
-        }
-    }
-
-    private Long getViewsForEvent(Long eventId) {
-        String start = LocalDateTime.now().minusYears(10).format(FORMATTER);
-        String end = LocalDateTime.now().format(FORMATTER);
-        String uri = "/events/" + eventId;
-
-        try {
-            var listStats = statsClient.getStats(start, end, List.of(uri), true);
-            return listStats.isEmpty() ? 0L : listStats.get(0).getHits();
-        } catch (Exception e) {
-            log.warn("Не удалось получить хит статистики: {}", e.getMessage());
-            return 0L;
         }
     }
 }

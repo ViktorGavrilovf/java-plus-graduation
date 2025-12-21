@@ -5,6 +5,7 @@ import ru.practicum.dto.event.EventRequestStatusUpdateResultDto;
 import ru.practicum.dto.request.ParticipationRequestDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestService {
 
@@ -18,4 +19,8 @@ public interface RequestService {
 
     EventRequestStatusUpdateResultDto changeRequestStatus(Long userId, Long eventId,
                                                           EventRequestStatusUpdateRequestDto updateRequestDto);
+
+    boolean hasVisitedEvent(Long userId, Long eventId);
+
+    Map<Long, Long> countConfirmedByEventIds(List<Long> eventIds);
 }
